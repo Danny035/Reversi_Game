@@ -1,0 +1,26 @@
+Coordinates checked by Capture Most Strategy for player 1 in the start of the game:
+Cube Coordinates: 0, -2, 2
+Cube Coordinates: 1, -2, 1
+Cube Coordinates: 2, -2, 0
+Cube Coordinates: -1, -1, 2
+Cube Coordinates: 0, -1, 1
+Cube Coordinates: 1, -1, 0
+Cube Coordinates: 2, -1, -1
+Cube Coordinates: -2, 0, 2
+Cube Coordinates: -1, 0, 1
+Cube Coordinates: 0, 0, 0
+Cube Coordinates: 1, 0, -1
+Cube Coordinates: 2, 0, -2
+Cube Coordinates: -2, 1, 1
+Cube Coordinates: -1, 1, 0
+Cube Coordinates: 0, 1, -1
+Cube Coordinates: 1, 1, -2
+Cube Coordinates: -2, 2, 0
+Cube Coordinates: -1, 2, -1
+Cube Coordinates: 0, 2, -2
+Cube Coordinates: 1, -2, 1
+Cube Coordinates: -1, -1, 2
+Cube Coordinates: 2, -1, -1
+Cube Coordinates: -2, 1, 1
+Cube Coordinates: 1, 1, -2
+Cube Coordinates: -1, 2, -1

@@ -1,0 +1,325 @@
+Overview:
+Reversi Hexagonal Edition is a fresh take on the classic two-player strategy board game.
+Unlike the traditional square board, this edition is played on a regular hexagonal grid.
+Each player owns discs that are black on one side and white on the other.
+The game's objective is to have the majority of the discs displaying your color
+by the time the board is filled.
+
+Quick Start:
+Initialize a ReversiModel with the desired board size.
+Use the getBoard() method to retrieve the current game state.
+Players take turns using the scoreEarnedByPlaceIn() method to
+determine potential points earned by placing a disc at a specific location.
+Utilize the getTurn() method to determine the current player.
+Monitor the game's progress using the isGameOver() method.
+
+Key Components:
+ReversiModelReadOnly Interface: Serves as the primary interface
+for interacting with the game's data and operations.
+Player Enum: Represents the two players - BLACK and WHITE.
+Cell: Represents an individual hexagonal cell on the board.
+
+Key Subcomponents:
+HexagonalCoordinates: Helps in identifying and
+working with specific cells based on their hexagonal coordinates on the board.
+Board: A collection of cells that form the hexagonal grid, facilitating various board operations.
+
+Source Organization:
+cs3500.reversi.model: Contains core game logic, data structures, and primary operations.
+cs3500.reversi: Houses the Player enum and other general game configurations.
+
+Invariants:
+HexReversi:
+ the length of the list of players and list of discs must always be the same size.
+    private final List<Player> players;
+    private final List<Disc> discs;
+
+Notes:
+The game starts with an equal number of both colors of discs arranged in the middle of the grid.
+
+
+
+
+
+--Changes for part 2--
+1.
+getCellInBoard(HexagonalCoordinates coordinates) was a private helper method in part 1,
+we realized that it is also a helpful observation method for players, so we made it public and
+put it into the ReversiModelReadOnly interface.
+
+2.
+We think it's more appropriate for observation methods that should only be used during the game
+to throw IllegalStateException when the game is already over. So we added the check for whether
+the game is still continuing for scoreEarnedByPlaceIn, movable, and getTurn methods, and if
+the game is already over, they now will throw IllegalStateException.
+
+3.
+We added in getAllNeighbors method in HexagonalCoordinates interface to help with getting all
+neighbors of a coordinates using a single call to this method, to get rid of the need to
+individually call all 6 get neighbors methods each time we want to get all the neighbors.
+
+4.
+We revised the movable method Javadoc in ReversiModelReadOnly interface and implementation
+in the HexReversi class that the method should return false if this is not the given player's
+turn to play. We revised the scoreEarnedByPlaceIn method in ReversiModelReadOnly interface as well,
+to make it determine first whether the given player should be able to play in this round,
+if not, just return 0.
+
+5.
+We added a tryMove method in ReversiModelReadOnly interface, a clone constructor for HexReversi and
+a copy method in Cell interface to make it convenient for Minimax strategy to try out multiple
+coordinates and see the resulting board which will then be used to predict on the opponent's
+gain.
+
+6.
+We realized that what we had before for getBoard method in HexReversi, even though able to prevent
+any change to the number of cells in board, but wasn't able to prevent changes made from cells
+(i.e. because cells in the returned board have the same reference as the cells in the board
+that the board used to keep track of game state in a HexReversi game, modifying the cells such as
+putting a new disc onto a cell in the return board will mutate the board keep tracking of the
+game state). So we revise the method to manually make a deep copy of the board using loop.
+
+--- New Interfaces and Classes Designed in Part 2 for package Strategy:
+
+- Interface: ChainableStrategy, Strategy
+
+ChainableStrategy:
+An interface for strategies that can be combined / chained with other ChainableStrategy,
+the chooseMove method in ChainableStrategy will return a list of coordinates (can be an empty list
+if this strategy can not find any good coordinates to place in, and can contain many coordinates
+if the strategy think there are several coordinates that are equally good under its standard).
+
+Strategy:
+An interface representing an actual strategy that a player would use if the player
+want an definite 1-choice best-move answer. Note that this strategy will always return the
+uppermost leftmost coordinates among the coordinates that it think is equally good if there is a
+tie, and it weights upper-ness more than left-ness, meaning that if 2 coordinates are in a tie, one
+is above the other but the other one is to the left of this one, then the method is going to return
+the upper one.
+
+- Class: AbstractStrategy, AbstractStrategy, AbstractStrategy, CaptureMost, CaptureMost, Minimax,
+SimplisticStrategy, SmarterStrategy
+
+AbstractStrategy:
+An abstract base class for choose move implementations in the Reversi game.
+This class defines common functionality or fields that are shared across various strategy
+implementations. As of right now, it contains the common default version of chooseMove where there
+is no list of valid moves passing in, and the method need to call getValidMove method in the
+given model to get all the valid moves then pass it into another method to actually choose the
+move based on the actual implementation of strategy classes extending this abstract class.
+
+CaptureMost:
+A strategy focused on capturing the maximum number of opponent pieces possible with each move.
+AvoidGivingCorners:
+A strategy that avoids moves that could potentially give the opponent access to corner cells.
+GoForCorners:
+A strategy that prioritizes capturing corner cells on the board.
+Minimax:
+A strategy based on the minimax algorithm, considering potential moves of the opponent.
+
+SimplisticStrategy:
+A basic strategy that uses only the Capture Most strategy.
+SmarterStrategy:
+An advanced strategy uses more complex decision-making logic by combining Capture Most, Avoid
+Giving Corners, and Go For Corners strategies.
+
+
+--New Interfaces and Classes Designed in Part 2 for package view:
+- Interface: ReversiFrame, ReversiFrame
+
+ReversiFrame:
+Represents an individual window in the Reversi game.
+This interface is intended to be implemented by classes that handle the main game window.
+Integrating playerActionFeatures: Adding feature such as listeners to handle high-level player actions.
+Managing the overall window of the game: Ensures that any implementing class can
+function as the main container for the game's GUI components.
+
+ReversiPanel:
+Represents a panel within the Reversi game window. Panels are subcomponents of
+the game's GUI, dedicated to specific aspects like the game board or control interfaces.
+Key Responsibilities:
+Handling user interactions: A panel can respond to keyboard and mouse events, translating
+these into game actions through feature listeners.
+Rendering part of the game's interface: Add feature
+
+- Class: ReversiGameScreen, ReversiGUI
+
+ReversiGameScreen:
+A concrete implementation of the ReversiPanel interface, representing the main game area of
+the Reversi application. This class is responsible for rendering the game board
+and handling user interactions.
+Rendering the game board: Displays hexagonal cells, discs.
+Handling user inputs: Interprets mouse clicks and keyboard events to allow players
+to know the coords.
+Updating the display: Dynamically adjusts the rendering based on the current game state
+and user interactions.
+
+ReversiGUI:
+Description: A concrete implementation of the ReversiFrame interface, extending JFrame.
+Integrates ReversiGameScreen as its central component, displaying the active game board.
+Handles the creation and configuration of the main game window,
+including size, layout, and window behaviors (like closing operations).
+
+
+--New Classes Designed in Part 2 for testing:
+- Mock Model Classes:
+MockModelToTranscript:
+A mock model used to record and provide a transcript of game state changes
+or decisions made by strategies.
+
+MockReversiModel:
+A basic mock implementation of the ReversiModelReadOnly interface.
+It simulates the game model for testing strategies.
+
+MockReversiModelForValuableLocation:
+A specialized mock model that manipulates the value of specific board locations.
+Useful for testing if strategies correctly identify and choose the most valuable locations.
+
+MockModelToTranscriptGameLogic:
+A mock model class used to simulate the actual game logic of Reversi while provide a transcript of
+specific methods calls and interactions of for testing.
+
+MockGameScreen:
+A mock view class to check whether the view knows the correct logical coordinates when a cell
+is clicked in the game board.
+
+
+
+--New Interfaces and Classes Designed in Part 2 for Main:
+Reversi:
+The main entrance-point class for running the Reversi game.
+Integrates all the strategies, models, and players,
+setting up the environment for playing and testing the game.
+
+
+
+EXTRA CREDIT: can be found in AvoidGivingCorners.java, GoForCorners.java, Minimax.java,
+SimplisticStrategy.java, and SmarterStrategy.java
+
+
+
+
+
+--Changes for part 3--
+1.
+We added in a startGame method into the ReversiModelReadWrite interface, to mark the clear
+distinction between the setup of the game and the actual start of the game play, to ensure that
+the first player can be notified for its turn appropriately.
+
+2.
+We added in a addTurnListener method into the ReversiModelReadWrite interface to accept listeners
+who are interested in getting notified when turn of the players change in the game.
+
+3.
+We renamed the Features interface we created in part 2 in the controller package to be
+PlayerActionFeatures to be clear that it represents a Features that can be used to listen to player
+actions either emitted from a view or a Player object, and moved it to the player package
+(the player package is also newly created in part 3 to organize interfaces and classes that are
+related to players).
+Then we added in another Features interface, ModelFeatures, into the model package to
+represents a Features that can be used to listen to a model to receive notifications such as there
+is a new turn in game that the active player have changed, or a player in stuck in a must pass
+state.
+
+4.
+We modify the main class Reversi, allow the users choose different game mode by using command line
+arguments. The game modes includes human vs human, human vs machine, machine vs machine, and
+machine player can use one of the 3 strategies: simplistic, smarter, or minimax, which make the
+Reversi game more flexible.
+
+
+--- New Interfaces and Classes Designed in Part 3
+1.
+We added player class to represent each type of players:Human Player, Simplistic Player,
+Smarter Player, and Minimax Player.
+The latter 3 represents machine players that use different type of strategies indicated by their
+name.
+Then we abstract out common code for those player classes into AbstractPlayer and
+AbstractMachinePlayer. AbstractPlayer provides the basic functionality common to all players, such
+as managing action listeners and executing common player actions. AbstractMachinePlayer extends
+AbstractPlayer, it provides an automated move selection based on the current state of the game
+model.
+
+2.
+We add a creator class for creating a specific type of player that will be playing a Reversi game.
+Type of players can be human or machine players, with machine players distinguished by the type of
+strategy they use.
+
+3.
+We made three mock class (MockHexReversiController, MockViewFrame, MockViewPanel) for testing the
+controller. The input of the controller is form the view addFeature method. In order to make sure
+the controller can handle the, we making the mock make sure the add feature, simulates model and
+view and simulate the player action work correctly in the controller.
+
+4.
+We created ReversiController interface and HexReversiController class to represent a controller for
+a Reversi game which is interacting with the model and view on behalf of a player.
+
+
+
+
+
+--Changes for part 4 (extra credit)--
+1. Remove getUpperLeftNeighbor, getUpperRightNeighbor, getLeftNeighbor, getRightNeighbor,
+   getLowerLeftNeighbor, getLowerRightNeighbor methods from HexagonalCoordinates interface,
+   because they are no longer needed, and can just be keep as private helper methods
+   in the CubeCoordinates class. Because our getNeighborFunctions
+
+2. Move getAllNeighbors, getRow, getLocationInRow, validCoordsOnBoard, and upperLeftMost from the
+   original HexagonalCoordinates interface up to the newly created Coordinates interface, because
+   those methods are applicable to all kinds of Coordinates, not just HexagonalCoordinates.
+
+
+3. add in getRow, getLocInRow, validCoordsOnBoard, get rid of isCornerInBoard
+
+4. upperLeftMost no longer a static method in the interface
+
+5. add in AbstractReversi class
+
+6. get rid of inLocation in HexagonalCoordinates
+
+7. rename HexCell to ReversiCell
+
+8. add getCorners
+
+9. get rid of setGameStateDescription
+
+
+--- New Interfaces and Classes Designed in Part 4 (extra credit)
+1. Coordinates, RowColumnCoordinates
+2. SquareReversi
+3. AbstractGameScreen, SquareReversiGameScreen
+4. SquareReversiTextualView
+
+
+-- Game Play Instructions --
+The command line arguments composed of 3 parts:
+1. shape of the board & cell
+    - "hex" represents a hexagonal board with hexagonal cell
+    - "square" represents a square board with square cell
+
+    If you didn't give any arguments, or the argument is invalid,
+    then the game board defaults to be hexagonal.
+
+2. size of the board
+    * notice that a hexagonal Reversi requires the board size being 3 or larger
+      and a square Reversi requires a board size being a positive even number
+
+    If you didn't give any arguments, then the game board defaults to a size of 6.
+
+3. players involved
+    You can use any combination of the following 2 command line arguments:
+    - "human" to indicate a human player
+    - "simplistic" to indicate a machine player using the simplistic strategy
+    - "smarter" to indicate a machine player using the smarter strategy
+    - "minimax" to indicate a machine player using the minimax strategy
+
+    If you didn't give any arguments, then the game defaults to 2 human players.
+    If you only input 1 arguments, then the game defaults the second player to be a human.
+    If what you inputted is not one of the above arguments, then that player is default to be a human
+    as well.
+
+The first player plays in the bottom window (that will be covered up by the window of the second
+player at the very beginning), and plays white disc.
+The second player plays in the top window and plays black disc.
+
